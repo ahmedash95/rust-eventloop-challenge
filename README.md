@@ -42,7 +42,7 @@ Read `challenge.md` for context, or jump into the numbered files under `challeng
 ## Progress
 
 - [x] [1. Minimal task queue](challenge/01-minimal-task-queue.md) — `EventLoop::new`, `spawn`, `run`, FIFO `VecDeque`, `FnOnce() + 'static`
-- [ ] [2. Timers](challenge/02-timers.md)
+- [x] [2. Timers](challenge/02-timers.md) — `set_timeout`, timer heap, sleep until next deadline
 - [ ] [3. Non-blocking TCP](challenge/03-non-blocking-tcp.md)
 - [ ] [4. Polling / I/O event loop](challenge/04-polling-io-event-loop.md)
 - [ ] [5. Simple HTTP client](challenge/05-simple-http-client.md)

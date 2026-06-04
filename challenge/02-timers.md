@@ -14,7 +14,6 @@ Keep `spawn()` and `run()` from Step 1 working.
 
 - Multiple timers can be scheduled at once.
 - Timers fire after their delay has elapsed.
-- Earlier timers fire before later timers.
 - The event loop should avoid a busy loop while waiting for the next timer.
 - Optional: add `set_interval(duration, callback)` for recurring callbacks.
 
