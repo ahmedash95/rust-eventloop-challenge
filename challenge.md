@@ -88,8 +88,13 @@ event_loop.run();
 ## Suggested Structures
 
 ```rust
-VecDeque<Box<dyn FnMut()>>
+VecDeque<Box<dyn FnOnce() + 'static>>
+
+// spawn:
+// F: FnOnce() + 'static
 ```
+
+Tasks should be `'static` (e.g. `println!` closures or `move` closures with owned/`Arc` state)—not multiple callbacks borrowing the same stack `&mut` variable.
 
 ---
 
@@ -142,7 +147,7 @@ event_loop.set_timeout(Duration::from_secs(2), || {
 ```rust
 struct Timer {
     execute_at: Instant,
-    callback: Box<dyn FnMut()>,
+    callback: Box<dyn FnOnce() + 'static>,
 }
 ```
 

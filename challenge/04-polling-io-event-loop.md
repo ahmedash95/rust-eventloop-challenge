@@ -27,6 +27,8 @@ event_loop.watch_readable(socket, || {
 event_loop.run();
 ```
 
+Stored readiness callbacks should be `'static` and refer to the socket via a token or owned handle—not `&mut` borrows of stack locals.
+
 Use cases to test:
 
 - Registering two sockets and receiving readiness for each independently.

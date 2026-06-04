@@ -39,19 +39,19 @@ Read `challenge.md` for context, or jump into the numbered files under `challeng
 - Start single-threaded; optimize for clarity over a “perfect” design.
 - Add features incrementally and keep earlier behavior working.
 
-## Steps
+## Progress
 
-1. [Minimal task queue](challenge/01-minimal-task-queue.md)
-2. [Timers](challenge/02-timers.md)
-3. [Non-blocking TCP](challenge/03-non-blocking-tcp.md)
-4. [Polling / I/O event loop](challenge/04-polling-io-event-loop.md)
-5. [Simple HTTP client](challenge/05-simple-http-client.md)
-6. [Generator-style tasks](challenge/06-generator-style-tasks.md)
-7. [Tiny executor](challenge/07-tiny-executor.md)
-8. [Sleep future](challenge/08-sleep-future.md)
-9. [Async HTTP future](challenge/09-async-http-future.md)
-10. [Mini async event loop](challenge/10-mini-async-event-loop.md)
-11. [Bonus challenges](challenge/11-bonus-challenges.md)
+- [x] [1. Minimal task queue](challenge/01-minimal-task-queue.md) — `EventLoop::new`, `spawn`, `run`, FIFO `VecDeque`, `FnOnce() + 'static`
+- [ ] [2. Timers](challenge/02-timers.md)
+- [ ] [3. Non-blocking TCP](challenge/03-non-blocking-tcp.md)
+- [ ] [4. Polling / I/O event loop](challenge/04-polling-io-event-loop.md)
+- [ ] [5. Simple HTTP client](challenge/05-simple-http-client.md)
+- [ ] [6. Generator-style tasks](challenge/06-generator-style-tasks.md)
+- [ ] [7. Tiny executor](challenge/07-tiny-executor.md)
+- [ ] [8. Sleep future](challenge/08-sleep-future.md)
+- [ ] [9. Async HTTP future](challenge/09-async-http-future.md)
+- [ ] [10. Mini async event loop](challenge/10-mini-async-event-loop.md)
+- [ ] [11. Bonus challenges](challenge/11-bonus-challenges.md)
 
 ## Getting started
 
