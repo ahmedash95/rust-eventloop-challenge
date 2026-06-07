@@ -1,9 +1,9 @@
 # Build Your Own Rust Event Loop
 
-A cumulative hands-on challenge inspired by systems programming and async event loops.
+A cumulative hands-on challenge for building a small educational async runtime in Rust.
 
 Goal:
-Build a tiny educational async event loop step-by-step to deeply understand:
+Build a tiny event loop step-by-step to deeply understand:
 
 - event loops
 - timers
@@ -21,12 +21,15 @@ This is about understanding the concepts deeply.
 
 # Rules
 
+- **Implement everything in `src/` by hand.** Challenge docs describe what to build — they do not ship solutions. Do not let tools or agents edit your implementation for you unless you explicitly want help on a specific problem.
 - Prefer implementing things manually first
 - Avoid Tokio initially
 - Keep everything single-threaded first
 - Optimize for understanding, not perfection
 - Build incrementally
 - Keep old APIs working while adding features
+
+Each numbered step under [`challenge/`](challenge/) describes what to build, **what to expect at the end**, short **hints**, and a **things to verify** checklist. Start there when implementing; this file is the high-level map.
 
 ---
 
@@ -54,7 +57,9 @@ event_loop.run();
 
 # PHASE 1 — Minimal Task Queue
 
-## Goal
+> Full instructions: [challenge/01-minimal-task-queue.md](challenge/01-minimal-task-queue.md)
+
+## In this stage
 
 Understand the core loop.
 
@@ -85,19 +90,6 @@ event_loop.run();
 
 ---
 
-## Suggested Structures
-
-```rust
-VecDeque<Box<dyn FnOnce() + 'static>>
-
-// spawn:
-// F: FnOnce() + 'static
-```
-
-Tasks should be `'static` (e.g. `println!` closures or `move` closures with owned/`Arc` state)—not multiple callbacks borrowing the same stack `&mut` variable.
-
----
-
 ## Success Criteria
 
 - tasks execute in insertion order
@@ -107,7 +99,9 @@ Tasks should be `'static` (e.g. `println!` closures or `move` closures with owne
 
 # PHASE 2 — Timers
 
-## Goal
+> Full instructions: [challenge/02-timers.md](challenge/02-timers.md)
+
+## In this stage
 
 Teach your event loop about time.
 
@@ -129,7 +123,7 @@ event_loop.set_timeout(Duration::from_secs(2), || {
 
 - multiple timers
 - timers expiring at different moments
-- recurring intervals (optional)
+- recurring intervals (optional; bonus in step 9)
 
 ---
 
@@ -142,17 +136,6 @@ event_loop.set_timeout(Duration::from_secs(2), || {
 
 ---
 
-## Suggested Structures
-
-```rust
-struct Timer {
-    execute_at: Instant,
-    callback: Box<dyn FnOnce() + 'static>,
-}
-```
-
----
-
 ## Success Criteria
 
 - timer fires roughly on time
@@ -160,184 +143,45 @@ struct Timer {
 
 ---
 
-# PHASE 3 — Non-Blocking TCP
+# PHASE 3 — Reactor Foundation
 
-## Goal
+> Full instructions: [challenge/03-reactor-foundation.md](challenge/03-reactor-foundation.md)
 
-Handle real IO.
+## In this stage
 
----
-
-## Requirements
-
-Open non-blocking sockets.
-
-Learn:
-
-```rust
-TcpStream::set_nonblocking(true)
-```
-
----
-
-## Build
-
-Tiny TCP echo client or server.
-
----
-
-## Concepts
-
-- sockets
-- readable/writable states
-- blocking vs non-blocking IO
-- partial reads/writes
-
----
-
-## Success Criteria
-
-- event loop does not freeze while waiting for network
-
----
-
-# PHASE 4 — Polling / IO Event Loop
-
-## Goal
-
-Make the event loop wait efficiently.
+Add the mio reactor — unified wait via `poll()` instead of `thread::sleep`. Plumbing only; public async TCP comes in phase 6.
 
 ---
 
 ## Requirements
 
-Use:
-
-- mio
-- epoll/kqueue indirectly via mio
-
----
-
-## Build
-
-The event loop should:
-
-```text
-register sockets
-wait for readiness
-wake handlers
-```
+- Unified wait via `mio` instead of `thread::sleep`
+- Steps 1–2 behavior unchanged (timers + tasks still work)
 
 ---
 
 ## Concepts
 
-- reactor pattern
-- readiness notifications
-- event dispatching
-- OS polling
-
----
-
-## Suggested APIs
-
-```rust
-event_loop.watch_readable(socket, callback)
-```
+- reactor pattern (mio, epoll/kqueue)
+- readiness notification
+- unified wait (timers + I/O in one blocking call)
 
 ---
 
 ## Success Criteria
 
-- multiple sockets can exist simultaneously
-- event loop sleeps efficiently
-- callbacks fire only when sockets ready
+- timers fire correctly through poll-based wait
+- no busy-spin while idle
 
 ---
 
-# PHASE 5 — Simple HTTP Client
+# PHASE 4 — Tiny Executor
 
-## Goal
+> Full instructions: [challenge/04-tiny-executor.md](challenge/04-tiny-executor.md)
 
-Use your event loop for real async work.
+## In this stage
 
----
-
-## Requirements
-
-Implement:
-
-```rust
-event_loop.http_get("http://example.com", |response| {
-    println!("{}", response.status);
-});
-```
-
----
-
-## Concepts
-
-- HTTP over TCP
-- async response handling
-- buffering
-- parsing
-- callbacks
-
----
-
-## Success Criteria
-
-- event loop can perform multiple simultaneous HTTP requests
-- requests do not block the event loop
-
----
-
-# PHASE 6 — Generator-Style Tasks
-
-## Goal
-
-Understand pausable execution.
-
----
-
-## Requirements
-
-Create tasks that can:
-
-```text
-pause
-resume
-continue later
-```
-
----
-
-## Concepts
-
-- coroutines
-- resumable tasks
-- state machines
-- yielding execution
-
----
-
-## Suggested Direction
-
-You can simulate this manually before real Rust futures.
-
----
-
-## Success Criteria
-
-- long tasks no longer block the event loop entirely
-
----
-
-# PHASE 7 — Build A Tiny Executor
-
-## Goal
-
-Understand Rust async internals.
+Understand Rust async internals — `Future::poll`, `Waker`, `Pin`.
 
 ---
 
@@ -351,7 +195,7 @@ event_loop.spawn(async {
 });
 ```
 
-without Tokio.
+without Tokio. Keep callback APIs from earlier phases working.
 
 ---
 
@@ -365,25 +209,17 @@ without Tokio.
 
 ---
 
-## Core Insight
-
-Your event loop repeatedly:
-
-```rust
-future.poll()
-```
-
----
-
 ## Success Criteria
 
 - async tasks can run on your event loop
 
 ---
 
-# PHASE 8 — Implement sleep().await
+# PHASE 5 — Implement sleep().await
 
-## Goal
+> Full instructions: [challenge/05-sleep-future.md](challenge/05-sleep-future.md)
+
+## In this stage
 
 Connect timers with async futures.
 
@@ -425,11 +261,51 @@ future not ready
 
 ---
 
-# PHASE 9 — Async HTTP Future
+# PHASE 6 — Async TCP I/O
 
-## Goal
+> Full instructions: [challenge/06-async-tcp.md](challenge/06-async-tcp.md)
 
-Combine sockets + futures + wakeups.
+## In this stage
+
+Add async TCP on the reactor — connect, read, write as futures.
+
+---
+
+## Requirements
+
+```rust
+event_loop.spawn(async {
+    let mut stream = TcpStream::connect("127.0.0.1:8080").await.unwrap();
+    stream.write_all(b"hello").await.unwrap();
+    let data = stream.read_to_end().await.unwrap();
+});
+```
+
+---
+
+## Concepts
+
+- non-blocking sockets (`set_nonblocking`, `WouldBlock`)
+- partial reads/writes
+- I/O-driven wakeups
+
+---
+
+## Success Criteria
+
+- echo round-trip through async API
+- timers still fire while sockets wait
+- multiple concurrent connections work
+
+---
+
+# PHASE 7 — Async HTTP Future
+
+> Full instructions: [challenge/07-async-http-future.md](challenge/07-async-http-future.md)
+
+## In this stage
+
+HTTP GET as a future — `http_get(url).await`.
 
 ---
 
@@ -445,28 +321,9 @@ let response = http_get(url).await;
 
 ## Concepts
 
-- socket registration
-- readiness wakeups
-- future polling
-- state machines
-
----
-
-## Core Flow
-
-```text
-poll()
-→ socket not ready
-→ store waker
-→ return Pending
-
-socket readable
-→ wake()
-→ event loop polls again
-
-response complete
-→ return Ready(response)
-```
+- HTTP over TCP
+- state machine (Connect → WriteRequest → ReadHeaders → ReadBody → Done)
+- buffering and parsing
 
 ---
 
@@ -477,11 +334,13 @@ response complete
 
 ---
 
-# PHASE 10 — Mini Async Event Loop
+# PHASE 8 — MVP Runtime
 
-## Goal
+> Full instructions: [challenge/08-mini-async-event-loop.md](challenge/08-mini-async-event-loop.md)
 
-Put everything together.
+## In this stage
+
+Integrate everything into a mini-Tokio MVP with reliability basics.
 
 ---
 
@@ -503,26 +362,28 @@ event_loop.run();
 
 ---
 
+## MVP additions
+
+- `shutdown()` — graceful stop
+- `timeout(duration, future).await`
+- `join(fut_a, fut_b).await`
+
+---
+
 # BONUS CHALLENGES
+
+> Full instructions: [challenge/09-bonus-challenges.md](challenge/09-bonus-challenges.md)
 
 ## Easy
 
 - recurring intervals
-- task IDs
-- event loop shutdown
-- cancellation
-- graceful socket closing
-
----
+- task IDs and cancellation
 
 ## Medium
 
 - task priorities
 - async file reads
-- select/join combinators
-- timeout futures
-
----
+- `select` combinator
 
 ## Hard
 
@@ -541,14 +402,12 @@ event_loop.run();
 |---|---|
 | 1 | queues, schedulers |
 | 2 | timers, scheduling |
-| 3 | sockets |
-| 4 | polling, reactor pattern |
-| 5 | HTTP internals |
-| 6 | coroutines/state machines |
-| 7 | Future/Waker/Poll |
-| 8 | wakeups |
-| 9 | async IO |
-| 10 | event loop architecture |
+| 3 | mio, reactor pattern, unified wait |
+| 4 | Future/Waker/Poll/Pin |
+| 5 | wakeups, timer-driven futures |
+| 6 | non-blocking TCP, I/O state machines |
+| 7 | async HTTP, parsing, buffering |
+| 8 | runtime integration, shutdown, timeout, join |
 
 ---
 

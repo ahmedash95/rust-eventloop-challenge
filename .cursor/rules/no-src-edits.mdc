@@ -1,0 +1,26 @@
+---
+description: This repo is a hands-on learning project — never edit src/ or Cargo.toml
+globs: "**/*"
+alwaysApply: true
+---
+
+# Learning project — do not implement for the developer
+
+This repository is a **hands-on async runtime learning project**. The developer writes all implementation code themselves.
+
+## Never edit without explicit permission
+
+- `src/**` — all Rust implementation code
+- `Cargo.toml` — dependencies and crate config
+
+## OK to edit
+
+- `challenge/**` — step instructions, hints, verify checklists
+- `challenge.md`, `README.md` — project documentation
+- `.cursor/rules/**` — agent guidance
+
+## When helping
+
+- Explain concepts, review code, debug errors, suggest approaches
+- Challenge docs describe outcomes and verify checklists — not full solutions in `src/`
+- Do not run broad refactors or "implement step N for you" unless the developer explicitly asks for a one-off exception on a specific file or problem

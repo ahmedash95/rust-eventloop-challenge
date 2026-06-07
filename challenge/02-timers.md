@@ -1,38 +1,46 @@
 # Step 2: Timers
 
-Teach the event loop to delay work until a specific time.
+**Builds on:** [Step 1 — Minimal task queue](01-minimal-task-queue.md)  
+**Difficulty:** easy
 
-## What To Implement
+## In this stage
 
-- `event_loop.set_timeout(duration, callback)`
-- A timer storage structure containing `execute_at: Instant` and a callback.
-- Event loop behavior that executes ready timers and sleeps or waits when only future timers remain.
+You'll teach your event loop about time. Callbacks registered with `set_timeout` should fire after a delay — but the loop must not busy-spin while waiting. When no tasks are ready, wait until the nearest timer deadline.
 
-Keep `spawn()` and `run()` from Step 1 working.
+Step 1's `spawn()` and `run()` must still work unchanged.
 
-## Requirements
+## What you'll implement
 
-- Multiple timers can be scheduled at once.
-- Timers fire after their delay has elapsed.
-- The event loop should avoid a busy loop while waiting for the next timer.
-- Optional: add `set_interval(duration, callback)` for recurring callbacks.
+- One-shot delayed callbacks via `set_timeout`
+- Multiple timers with different deadlines
+- Efficient waiting when only future timers remain
 
-## Test-Oriented Examples
+## Where to extend your code
 
-```rust
-let mut event_loop = EventLoop::new();
+- `src/timer.rs` (new file)
+- `src/event_loop.rs`
 
-event_loop.set_timeout(Duration::from_millis(20), || {
-    println!("later");
-});
+## What to expect at the end
 
-event_loop.run();
+You can mix immediate tasks and delayed callbacks. Output (rough ordering):
+
+```text
+immediate
+10ms
+50ms
 ```
 
-Use cases to test:
+The loop waits efficiently between work — no busy-spin. Step 3 swaps the wait mechanism for a reactor; timer behavior stays the same.
 
-- A zero-duration timer runs during the next `run()`.
-- A 10 ms timer fires before a 50 ms timer.
-- Normal queued tasks run without waiting for future timers.
-- `run()` exits after all timers have fired.
-- The observed firing time is greater than or equal to the requested delay, allowing a small tolerance for scheduling.
+## Hints
+
+- Ready tasks must not block on unrelated future timers — only wait when the task queue is empty.
+- If timers never fire, check that the soonest deadline is picked first.
+
+## Things to verify
+
+- [ ] Zero-duration timer runs during the next `run()` iteration
+- [ ] A 10 ms timer fires before a 50 ms timer
+- [ ] Spawned tasks run without waiting for unrelated future timers
+- [ ] `run()` exits after all timers have fired
+- [ ] Observed delay is ≥ requested delay (allow small OS tolerance)
