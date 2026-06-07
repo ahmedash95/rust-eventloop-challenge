@@ -1,8 +1,10 @@
 use crate::timer::Timer;
 use std::collections::{BinaryHeap, VecDeque};
-use std::time::Instant;
+use std::time::{Duration, Instant};
+use mio::{Events, Poll};
 
 pub struct EventLoop {
+    poll: Poll,
     queue: VecDeque<Box<dyn FnOnce()>>,
     timers: BinaryHeap<Timer>,
 }
@@ -10,6 +12,7 @@ pub struct EventLoop {
 impl EventLoop {
     pub fn new() -> Self {
         EventLoop {
+            poll: Poll::new().expect("failed to create poll"),
             queue: VecDeque::new(),
             timers: BinaryHeap::new(),
         }
@@ -56,13 +59,16 @@ impl EventLoop {
             return;
         }
 
+        let timeout = self.timers.peek().map(|t| {
+            t.duration.saturating_duration_since(Instant::now())
+        });
+
         // check timers
-        if let Some(timer) = self.timers.peek() {
-            let now = Instant::now();
-            if timer.duration > now {
-                let sleep_duration = timer.duration - now;
-                std::thread::sleep(sleep_duration);
-            }
+        if timeout.is_some_and(|d| d > Duration::ZERO) {
+            // todo: avoid allocating events every time
+            // 1024 capacity is default value. keep it for now
+            let mut events = Events::with_capacity(1024);
+            self.poll.poll(&mut events, timeout).unwrap();
         }
     }
 
