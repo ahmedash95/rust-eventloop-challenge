@@ -2,10 +2,15 @@ use crate::timer::Timer;
 use std::collections::{BinaryHeap, VecDeque};
 use std::time::{Duration, Instant};
 use mio::{Events, Poll};
+use std::future::Future;
+use std::pin::Pin;
+use std::task::{Context, Waker};
+
 
 pub struct EventLoop {
     poll: Poll,
     queue: VecDeque<Box<dyn FnOnce()>>,
+    futures: Vec<Pin<Box<dyn Future<Output = ()> + 'static>>>,
     timers: BinaryHeap<Timer>,
 }
 
@@ -14,6 +19,7 @@ impl EventLoop {
         EventLoop {
             poll: Poll::new().expect("failed to create poll"),
             queue: VecDeque::new(),
+            futures: Vec::new(),
             timers: BinaryHeap::new(),
         }
     }
@@ -25,7 +31,15 @@ impl EventLoop {
         self.queue.push_back(Box::new(f));
     }
 
-    pub fn set_timeout(&mut self, _duration: std::time::Duration, _f: impl FnOnce() + 'static) {
+    pub fn spawn_async<F>(&mut self, f: F)
+    where
+        F: Future<Output = ()> + 'static,
+    {
+        self.futures.push(Box::pin(f));
+    }
+
+
+    pub fn set_timeout(&mut self, _duration: Duration, _f: impl FnOnce() + 'static) {
         let timer = Timer {
             duration: Instant::now() + _duration,
             callback: Box::new(_f),
@@ -72,8 +86,16 @@ impl EventLoop {
         }
     }
 
+    fn run_futures(&mut self) {
+         let waker = Waker::noop();
+         let mut cx = Context::from_waker(&waker);
+         self.futures.retain_mut(|future| {
+             future.as_mut().poll(&mut cx).is_pending()
+         });
+     }
+
     fn all_done(&self) -> bool {
-        self.queue.is_empty() && self.timers.is_empty()
+        self.queue.is_empty() && self.timers.is_empty() && self.futures.is_empty()
     }
 
     pub fn run(&mut self) {
@@ -81,6 +103,7 @@ impl EventLoop {
             self.ensure_work();
             self.run_timers();
             self.run_tasks();
+            self.run_futures();
 
             if self.all_done() {
                 break;

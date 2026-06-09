@@ -45,8 +45,8 @@ Read `challenge.md` for the high-level map, or jump into the numbered files unde
 
 - [x] [1. Minimal task queue](challenge/01-minimal-task-queue.md) — `EventLoop::new`, `spawn`, `run`, FIFO `VecDeque`, `FnOnce() + 'static`
 - [x] [2. Timers](challenge/02-timers.md) — `set_timeout`, timer heap, sleep until next deadline
-- [ ] [3. Reactor foundation](challenge/03-reactor-foundation.md) — internal mio, `poll.poll` replaces `thread::sleep`
-- [ ] [4. Tiny executor](challenge/04-tiny-executor.md) — `spawn(async { ... })`, `Future::poll`, wakers
+- [x] [3. Reactor foundation](challenge/03-reactor-foundation.md) — internal mio, `poll.poll` replaces `thread::sleep`
+- [x] [4. Tiny executor](challenge/04-tiny-executor.md) — `spawn_async`, `Future::poll`, noop waker
 - [ ] [5. Sleep future](challenge/05-sleep-future.md) — `sleep(duration).await` via timers + executor
 - [ ] [6. Async TCP](challenge/06-async-tcp.md) — `TcpStream::connect(...).await`, read/write futures
 - [ ] [7. Async HTTP future](challenge/07-async-http-future.md) — `http_get(url).await`
