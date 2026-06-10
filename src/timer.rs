@@ -1,6 +1,14 @@
+use std::task::Waker;
+use std::time::Instant;
+
+pub enum TimerKind {
+    Callback(Box<dyn FnOnce() + 'static>),
+    Waker(Waker),
+}
+
 pub struct Timer {
-    pub duration: std::time::Instant,
-    pub callback: Box<dyn FnOnce() + 'static>,
+    pub duration: Instant,
+    pub kind: TimerKind,
 }
 
 impl PartialEq for Timer {
